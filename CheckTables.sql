@@ -1,15 +1,12 @@
 
-SELECT * FROM icd9_dict;
-SELECT * FROM physician;
-SELECT * FROM nurse;
-SELECT * FROM patient LIMIT 10;
-SELECT * FROM admission LIMIT 10;
-SELECT * FROM triage_assessment LIMIT 10;
-SELECT * FROM diagnosis LIMIT 10;
-SELECT * FROM icu_stay LIMIT 10;
-SELECT * FROM clinical_note LIMIT 10;
-SELECT * FROM diagnostic_order LIMIT 10;
-SELECT * FROM radiology_examination LIMIT 10;
-SELECT * FROM radiology_report LIMIT 10;
-SELECT * FROM discharge_record LIMIT 10;
-SELECT * FROM surgical_procedure;
+SELECT 
+    (SELECT COUNT(*) FROM patient) AS live_patient_count,
+    (SELECT COUNT(*) FROM admission) AS live_admission_count,
+    (SELECT COUNT(*) FROM triage_assessment) AS live_triage_count,
+    (SELECT COUNT(*) FROM diagnosis) AS live_diagnosis_count,
+    (SELECT COUNT(*) FROM icu_stay) AS live_icu_stay_count,
+    (SELECT COUNT(*) FROM clinical_note) AS live_notes_count,
+    (SELECT COUNT(*) FROM diagnostic_order) AS live_orders_count,
+    (SELECT COUNT(*) FROM radiology_examination) AS live_exams_count,
+    (SELECT COUNT(*) FROM surgical_procedure) AS live_procedures_count,
+    (SELECT COUNT(*) FROM discharge_record) AS live_discharge_count;

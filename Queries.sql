@@ -93,7 +93,7 @@
 	GROUP BY patient.name, admission.admission_id
 	HAVING COUNT(DISTINCT diagnosis.icd9_code) > 1;
 
-	SELECT * FROM clinical_note;
+	
 
 -- Q18: Retrieve the latest clinical note for each patient. Display the patient name, note
 -- type, note creation date and time, and note contents
