@@ -94,6 +94,30 @@ LEFT JOIN radiology_examination re
 GROUP BY p.patient_id, p.name
 ORDER BY p.name;
 
+-- side by side (AI generated this code )
+WITH patient_counts AS (
+    SELECT
+        ROW_NUMBER() OVER (ORDER BY p.name) AS rn,
+        p.name,
+        COUNT(re.examination_id) AS total_radiology_examinations
+    FROM patient p
+    LEFT JOIN diagnostic_order d
+        ON p.patient_id = d.patient_id
+    LEFT JOIN radiology_examination re
+        ON d.order_id = re.order_id
+    GROUP BY p.patient_id, p.name
+)
+SELECT
+    a.name AS col_1,
+    a.total_radiology_examinations ,
+    b.name AS col_2,
+    b.total_radiology_examinations 
+FROM patient_counts a
+LEFT JOIN patient_counts b
+    ON b.rn = a.rn + CEIL((SELECT COUNT(*) FROM patient_counts) / 2.0)
+WHERE a.rn <= CEIL((SELECT COUNT(*) FROM patient_counts) / 2.0)
+ORDER BY a.rn;
+
 
 -- Q12: Find patients whose discharge-summary clinical note
 -- contains the keyword "recovery", case-insensitively.
