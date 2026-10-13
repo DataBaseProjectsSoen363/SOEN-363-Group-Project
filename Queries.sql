@@ -49,17 +49,64 @@
 -- 9 - 12   |   @Mohammad
 -- ---------------------------------------------------------------------
 
--- Q9
+-- Q9: Calculate the average length of stay for each critical care unit type.
+SELECT
+    unit_type,
+    ROUND(
+        AVG(EXTRACT(EPOCH FROM (exit_date_time - entry_date_time)) / 86400.0),
+        2
+    ) AS average_length_of_stay_days
+FROM icu_stay
+WHERE exit_date_time IS NOT NULL
+GROUP BY unit_type
+ORDER BY unit_type;
 
 
--- Q10
+-- Q10: List patients who had a surgical procedure before entering
+-- an ICU or CCU during the same admission.
+SELECT
+    p.name,
+    sp.procedure_date_time,
+    i.unit_type,
+    i.entry_date_time
+FROM patient p
+JOIN admission a
+    ON p.patient_id = a.patient_id
+JOIN surgical_procedure sp
+    ON a.admission_id = sp.admission_id
+JOIN icu_stay i
+    ON a.admission_id = i.admission_id
+WHERE i.unit_type IN ('ICU', 'CCU')
+  AND sp.procedure_date_time < i.entry_date_time
+ORDER BY p.name;
 
 
--- Q11
+-- Q11: Count the total number of radiology examinations for each patient,
+-- including patients who have not received any examinations.
+SELECT
+    p.name,
+    COUNT(re.examination_id) AS total_radiology_examinations
+FROM patient p
+LEFT JOIN diagnostic_order d
+    ON p.patient_id = d.patient_id
+LEFT JOIN radiology_examination re
+    ON d.order_id = re.order_id
+GROUP BY p.patient_id, p.name
+ORDER BY p.name;
 
 
--- Q12
-
+-- Q12: Find patients whose discharge-summary clinical note
+-- contains the keyword "recovery", case-insensitively.
+SELECT DISTINCT
+    p.name
+FROM patient p
+JOIN admission a
+    ON p.patient_id = a.patient_id
+JOIN clinical_note cn
+    ON a.admission_id = cn.admission_id
+WHERE cn.type = 'Discharge Summary'
+  AND cn.contents ILIKE '%recovery%'
+ORDER BY p.name;
 
 -- ---------------------------------------------------------------------
 -- 13 - 16   |   @Laurent
