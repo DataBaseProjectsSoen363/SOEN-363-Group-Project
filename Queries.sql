@@ -169,9 +169,9 @@ SELECT
 FROM admission
 -- JOIN for admission + patient table
 JOIN patient ON admission.patient_id = patient.patient_id
+-- Filter for maximum length of stay
 WHERE (admission.discharge_date_time - admission.admission_date_time) = (
-    SELECT MAX(discharge_date_time - admission_date_time)
-    FROM admission);
+    SELECT MAX(discharge_date_time - admission_date_time) FROM admission);
 
 -- Q15 Count the total number of transfers between hospital units for each patient. The
 -- patient’s first unit placement is not considered a transfer; each subsequent unit stay
