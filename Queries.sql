@@ -17,16 +17,39 @@
 -- 1 - 4   |   @Zitkq
 -- ---------------------------------------------------------------------
 
--- Q1
+-- Q1: List the names and admission dates of all patients who were classified as high-priority emergency patients during triage.
+
+SELECT p.name,a.admission_date_time
+FROM admission a
+JOIN patient p ON a.patient_id = p.patient_id
+JOIN triage_assessment t ON a.admission_id = t.admission_id
+WHERE t.triage_priority_level = 'High-Priority Emergency';
 
 
--- Q2
+
+-- Q2:Find all patients who had more than three hospital admissions. Display the patient identifier, patient name, and total number of admissions. 
+SELECT p.patient_id, p.name, COUNT(a.admission_id) AS total_admissions
+FROM patient p
+JOIN admission a ON a.patient_id = p.patient_id
+GROUP BY p.patient_id, p.name
+HAVING COUNT(a.admission_id) > 3;
 
 
--- Q3
+-- Q3:Retrieve the names, admission dates, and discharge dates of patients who were dis- charged without undergoing any surgical procedure during the admission. 
+SELECT p.name, a.admission_date_time, a.discharge_date_time
+FROM admission a
+JOIN patient p ON a.patient_id = p.patient_id
+JOIN surgical_procedure s ON a.admission_id = s.admission_id
+WHERE discharge_date_time IS NOT NULL;
 
 
--- Q4
+-- Q4: List all patients who had both a radiology examination and a surgical procedure during the same admission. 
+SELECT DISTINCT p.patient_id, p.name
+FROM patient p
+JOIN admission a ON a.patient_id = p.patient_id
+JOIN diagnostic_order d ON d.admission_id = a.admission_id
+JOIN radiology_examination r ON r.order_id = d.order_id
+JOIN surgical_procedure s ON s.admission_id = a.admission_id;
 
 
 -- ---------------------------------------------------------------------
