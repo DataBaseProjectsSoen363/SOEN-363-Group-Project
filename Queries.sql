@@ -36,7 +36,11 @@ HAVING COUNT(a.admission_id) > 3;
 
 -- Q3: Retrieve the names, admission dates, and discharge dates of patients who were discharged
 -- without undergoing any surgical procedure during the admission.
-
+SELECT p.name, a.admission_date_time, a.discharge_date_time
+FROM admission a
+JOIN patient p ON a.patient_id = p.patient_id
+JOIN surgical_procedure s ON a.admission_id = s.admission_id
+WHERE discharge_date_time IS NOT NULL;
 
 -- Q4: List all patients who had both a radiology examination and a surgical procedure
 -- during the same admission.
@@ -242,13 +246,18 @@ HAVING COUNT(DISTINCT icu_stay.unit_type) > 1;
 	HAVING COUNT(DISTINCT diagnosis.icd9_code) > 1;
 
 	
+-- Q18: Retrieve the latest clinical note for each patient.
+SELECT DISTINCT ON (p.patient_id)
+    p.name,
+    cn.type AS type,
+    cn.creation_date AS creation_date,
+    cn.patient_symptoms AS patient_symptoms
+FROM patient p
+JOIN admission a ON a.patient_id = p.patient_id
+JOIN clinical_note cn ON a.admission_id = cn.admission_id
+ORDER BY p.patient_id, cn.creation_date DESC;
 
--- Q18: Retrieve the latest clinical note for each patient. Display the patient name, note
--- type, note creation date and time, and note contents
-	SELECT patient.name,clinical_note.type,clinical_note.creation_date,clinical_note.patient_symptoms
-	FROM patient
-	JOIN admission on admission.patient_id = patient.patient_id
-	JOIN clinical_note ON admission.admission_id = clinical_note.admission_id
+
 	
 -- Q19: List all admissions where the patient’s discharge status or discharge condition indicates
 -- that the patient died during the hospital stay. Display the patient name, admission
@@ -271,18 +280,24 @@ ORDER BY d.discharge_date_time;
 -- name, admission identifier, procedure type, radiology examination type, and the common
 -- date.
 SELECT
-	patient.name,
-	admission.admission_id,
-	surgical_procedure.procedure_name,
-	radiology_examination.examination_type,
-	DATE(surgical_procedure.procedure_date_time) AS common_date
-FROM patient
-JOIN admission 			   ON admission.patient_id = patient.patient_id
-JOIN surgical_procedure    ON admission.admission_id = surgical_procedure.admission_id
-JOIN diagnostic_order      ON diagnostic_order.admission_id = admission.admission_id
-JOIN radiology_examination ON radiology_examination.order_id = diagnostic_order.order_id
-WHERE DATE(surgical_procedure.procedure_date_time) = DATE(radiology_examination.examination_date_time)
-ORDER BY common_date,patient.name;
+    p.name,
+    a.admission_id,
+    sp.procedure_id,
+    re.examination_type,
+    DATE(sp.procedure_date_time) AS common_date
+FROM patient p
+JOIN admission a ON a.patient_id = p.patient_id
+JOIN surgical_procedure sp ON a.admission_id = sp.admission_id
+JOIN diagnostic_order d ON d.admission_id = a.admission_id
+JOIN radiology_examination re ON re.order_id = d.order_id
+WHERE DATE(sp.procedure_date_time) = DATE(re.examination_date_time)
+ORDER BY common_date, p.name;
+
+
+
+
+
+
 
 -- Show all surgery dates and exam dates per admission, side by side
 SELECT
