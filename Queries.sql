@@ -71,11 +71,14 @@ JOIN surgical_procedure s ON s.admission_id = a.admission_id;
 -- 9 - 12   |   @Mohammad
 -- ---------------------------------------------------------------------
 
--- Q9: Calculate the average length of stay for each critical care unit type.
+-- Q9: CCalculate the average length of stay for each critical care unit type, such as MICU,
+-- SICU, ICU, and CCU. Display the unit type and its average length of stay.
 SELECT
     unit_type,
     ROUND(
-        AVG(EXTRACT(EPOCH FROM (exit_date_time - entry_date_time)) / 86400.0),
+        AVG(
+            EXTRACT(DAY FROM (exit_date_time - entry_date_time))
+        ),
         2
     ) AS average_length_of_stay_days
 FROM icu_stay
@@ -107,39 +110,16 @@ ORDER BY p.name;
 -- including patients who have not received any examinations.
 SELECT
     p.name,
-    COUNT(re.examination_id) AS total_radiology_examinations
+    COUNT(re.examination_id) AS total_radiology_exams
 FROM patient p
-LEFT JOIN diagnostic_order d
-    ON p.patient_id = d.patient_id
+LEFT JOIN admission a
+    ON p.patient_id = a.patient_id
+LEFT JOIN diagnostic_order doo
+    ON a.admission_id = doo.admission_id
 LEFT JOIN radiology_examination re
-    ON d.order_id = re.order_id
+    ON doo.order_id = re.order_id
 GROUP BY p.patient_id, p.name
 ORDER BY p.name;
-
--- side by side (AI generated this code )
-WITH patient_counts AS (
-    SELECT
-        ROW_NUMBER() OVER (ORDER BY p.name) AS rn,
-        p.name,
-        COUNT(re.examination_id) AS total_radiology_examinations
-    FROM patient p
-    LEFT JOIN diagnostic_order d
-        ON p.patient_id = d.patient_id
-    LEFT JOIN radiology_examination re
-        ON d.order_id = re.order_id
-    GROUP BY p.patient_id, p.name
-)
-SELECT
-    a.name AS col_1,
-    a.total_radiology_examinations ,
-    b.name AS col_2,
-    b.total_radiology_examinations 
-FROM patient_counts a
-LEFT JOIN patient_counts b
-    ON b.rn = a.rn + CEIL((SELECT COUNT(*) FROM patient_counts) / 2.0)
-WHERE a.rn <= CEIL((SELECT COUNT(*) FROM patient_counts) / 2.0)
-ORDER BY a.rn;
-
 
 -- Q12: Find patients whose discharge-summary clinical note
 -- contains the keyword "recovery", case-insensitively.
@@ -299,17 +279,9 @@ ORDER BY common_date, p.name;
 
 
 
--- Show all surgery dates and exam dates per admission, side by side
-SELECT
-    a.admission_id,
-    DATE(sp.procedure_date_time)      AS surgery_date,
-    DATE(re.examination_date_time)    AS exam_date,
-    (DATE(sp.procedure_date_time) = DATE(re.examination_date_time)) AS same_day
-FROM admission a
-JOIN surgical_procedure  sp ON sp.admission_id = a.admission_id
-JOIN diagnostic_order    o  ON o.admission_id  = a.admission_id
-JOIN radiology_examination re ON re.order_id   = o.order_id
-ORDER BY a.admission_id;
+
+
+
 	
 
 
