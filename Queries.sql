@@ -33,16 +33,17 @@ JOIN admission a ON a.patient_id = p.patient_id
 GROUP BY p.patient_id, p.name
 HAVING COUNT(a.admission_id) > 3;
 
-
 -- Q3: Retrieve the names, admission dates, and discharge dates of patients who were discharged
 -- without undergoing any surgical procedure during the admission.
 SELECT p.name, a.admission_date_time, d.discharge_date_time
-FROM patient p 
+FROM patient p
 JOIN admission a ON p.patient_id = a.patient_id
 JOIN discharge_record d ON a.admission_id = d.admission_id
-WHERE NOT EXISTS (
-SELECT 1 FROM surgical_procedure sp
-WHERE sp.admission_id = a.admission_id)
+WHERE NOT EXISTS(
+	SELECT 1
+	FROM surgical_procedure sp
+	WHERE sp.admission_id = a.admission_id
+)
 ORDER BY p.name;
 
 -- Q4: List all patients who had both a radiology examination and a surgical procedure
@@ -122,7 +123,7 @@ ORDER BY p.name;
 -- Q12: Find patients whose discharge-summary clinical note
 -- contains the keyword "recovery", case-insensitively.
 SELECT DISTINCT
-    p.name,cn.type,cn.contents
+    p.name
 FROM patient p
 JOIN admission a
     ON p.patient_id = a.patient_id
