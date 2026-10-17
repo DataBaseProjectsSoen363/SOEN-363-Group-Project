@@ -75,11 +75,11 @@ JOIN surgical_procedure s ON s.admission_id = a.admission_id;
 -- 9 - 12   |   @Mohammad
 -- ---------------------------------------------------------------------
 
--- Q9: CCalculate the average length of stay for each critical care unit type, such as MICU,
+-- Q9: Calculate the average length of stay for each critical care unit type, such as MICU,
 -- SICU, ICU, and CCU. Display the unit type and its average length of stay.
 SELECT
     unit_type,
-    AVG(exit_date_time - entry_date_time) AS average_length_of_stay_days
+    AVG(exit_date_time - entry_date_time) AS average_length_of_stay
 FROM icu_stay
 WHERE exit_date_time IS NOT NULL
 GROUP BY unit_type
@@ -109,16 +109,17 @@ ORDER BY p.name;
 -- including patients who have not received any examinations.
 SELECT
     p.name,
-    COUNT(re.examination_id) AS total_radiology_exams
+    COUNT(re.examination_id) AS total_radiology_examinations
 FROM patient p
 LEFT JOIN admission a
     ON p.patient_id = a.patient_id
-LEFT JOIN diagnostic_order doo
-    ON a.admission_id = doo.admission_id
+LEFT JOIN diagnostic_order d
+    ON a.admission_id = d.admission_id
 LEFT JOIN radiology_examination re
-    ON doo.order_id = re.order_id
+    ON d.order_id = re.order_id
 GROUP BY p.patient_id, p.name
 ORDER BY p.name;
+
 
 -- Q12: Find patients whose discharge-summary clinical note
 -- contains the keyword "recovery", case-insensitively.
@@ -130,7 +131,7 @@ JOIN admission a
 JOIN clinical_note cn
     ON a.admission_id = cn.admission_id
 WHERE cn.type = 'Discharge Summary'
-  AND cn.contents ILIKE '%recovery%'
+  AND LOWER(cn.contents) LIKE '%recovery%'
 ORDER BY p.name;
 
 -- ---------------------------------------------------------------------
