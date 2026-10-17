@@ -75,12 +75,7 @@ JOIN surgical_procedure s ON s.admission_id = a.admission_id;
 -- SICU, ICU, and CCU. Display the unit type and its average length of stay.
 SELECT
     unit_type,
-    ROUND(
-        AVG(
-            EXTRACT(DAY FROM (exit_date_time - entry_date_time))
-        ),
-        2
-    ) AS average_length_of_stay_days
+    AVG(exit_date_time - entry_date_time) AS average_length_of_stay_days
 FROM icu_stay
 WHERE exit_date_time IS NOT NULL
 GROUP BY unit_type
@@ -124,7 +119,7 @@ ORDER BY p.name;
 -- Q12: Find patients whose discharge-summary clinical note
 -- contains the keyword "recovery", case-insensitively.
 SELECT DISTINCT
-    p.name
+    p.name,cn.type,cn.contents
 FROM patient p
 JOIN admission a
     ON p.patient_id = a.patient_id
