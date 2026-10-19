@@ -56,19 +56,65 @@ JOIN radiology_examination r ON r.order_id = d.order_id
 JOIN surgical_procedure s ON s.admission_id = a.admission_id;
 
 -- ---------------------------------------------------------------------
--- 5 - 8   |   @JuanMa_487
+-- 5 - 8   |   @Juan Manuel Alvarez
 -- ---------------------------------------------------------------------
 
--- Q5
+-- Q5: Find all ICU or CCU unit stays that lasted more than seven days. Display the
+-- patient name, unit type, unit entry time, unit exit time, and calculated length of stay.
+SELECT
+    p.name,
+    i.unit_type,
+    i.entry_date_time,
+    i.exit_date_time,
+    (i.exit_date_time - i.entry_date_time) AS length_of_stay
+FROM icu_stay i
+JOIN admission a ON i.admission_id = a.admission_id
+JOIN patient p ON a.patient_id = p.patient_id
+WHERE i.unit_type IN ('ICU', 'CCU')
+  AND i.exit_date_time IS NOT NULL
+  AND (i.exit_date_time - i.entry_date_time) > INTERVAL '7 days';
 
 
--- Q6
+-- Q6: Count the total number of hospital admissions for each patient. Include patients
+-- who have no recorded admissions.
+SELECT
+    p.patient_id,
+    p.name,
+    COUNT(a.admission_id) AS total_admissions
+FROM patient p
+LEFT JOIN admission a ON a.patient_id = p.patient_id
+GROUP BY p.patient_id, p.name;
 
 
--- Q7
+-- Q7: List all patients who entered the hospital through the Emergency Department and were
+-- later transferred to an ICU or CCU during the same admission.
+SELECT DISTINCT p.name
+FROM patient p
+JOIN admission a ON a.patient_id = p.patient_id
+JOIN icu_stay i ON i.admission_id = a.admission_id
+WHERE a.admission_source = 'Emergency Room'
+  AND i.unit_type IN ('ICU', 'CCU')
+  AND i.entry_date_time > a.admission_date_time;
 
 
--- Q8
+-- Q8: Retrieve the most frequently assigned primary ICD-9 diagnosis among admissions that
+-- included at least one ICU or CCU stay. Display the ICD-9 code, its official description,
+-- and the number of times it was assigned.
+SELECT
+    d.icd9_code,
+    dict.official_diagnosis_title, -- This was chosen because the assignment says "official description" instead of description
+    COUNT(*) AS times_assigned
+FROM diagnosis d
+JOIN icd9_dict dict ON dict.icd9_code = d.icd9_code
+WHERE d.primary_diagnosis = TRUE
+  AND EXISTS (
+      SELECT 1 FROM icu_stay i
+      WHERE i.admission_id = d.admission_id
+        AND i.unit_type IN ('ICU', 'CCU')
+  )
+GROUP BY d.icd9_code, dict.official_diagnosis_title
+ORDER BY times_assigned DESC
+FETCH FIRST 1 ROW WITH TIES;
 
 
 -- ---------------------------------------------------------------------
