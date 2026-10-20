@@ -114,7 +114,7 @@ WHERE d.primary_diagnosis = TRUE
   )
 GROUP BY d.icd9_code, dict.official_diagnosis_title
 ORDER BY times_assigned DESC
-FETCH FIRST 1 ROW WITH TIES;
+FETCH FIRST 1 ROW ONLY;
 
 
 -- ---------------------------------------------------------------------
