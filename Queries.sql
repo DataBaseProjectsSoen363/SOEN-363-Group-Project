@@ -59,13 +59,42 @@ JOIN surgical_procedure s ON s.admission_id = a.admission_id;
 -- 5 - 8   |   @JuanMa_487
 -- ---------------------------------------------------------------------
 
--- Q5
+-- Q5: Find all ICU or CCU unit stays that lasted more than seven days. Display the
+-- patient name, unit type, unit entry time, unit exit time, and calculated length of stay.
+SELECT
+    p.name,
+    i.unit_type,
+    i.entry_date_time,
+    i.exit_date_time,
+    (i.exit_date_time - i.entry_date_time) AS length_of_stay
+FROM icu_stay i
+JOIN admission a ON i.admission_id = a.admission_id
+JOIN patient p ON a.patient_id = p.patient_id
+WHERE i.unit_type IN ('ICU', 'CCU')
+  AND i.exit_date_time IS NOT NULL
+  AND (i.exit_date_time - i.entry_date_time) > INTERVAL '7 days';
+
+-- Q6: Count the total number of hospital admissions for each patient. Include patients
+-- who have no recorded admissions.
+SELECT
+    p.patient_id,
+    p.name,
+    COUNT(a.admission_id) AS total_admissions
+FROM patient p
+LEFT JOIN admission a ON a.patient_id = p.patient_id
+GROUP BY p.patient_id, p.name;
 
 
--- Q6
 
-
--- Q7
+-- Q7: List all patients who entered the hospital through the Emergency Department and were
+-- later transferred to an ICU or CCU during the same admission.
+SELECT DISTINCT p.name
+FROM patient p
+JOIN admission a ON a.patient_id = p.patient_id
+JOIN icu_stay i ON i.admission_id = a.admission_id
+WHERE a.admission_source = 'Emergency Room'
+  AND i.unit_type IN ('ICU', 'CCU')
+  AND i.entry_date_time > a.admission_date_time;
 
 
 -- Q8
@@ -75,11 +104,11 @@ JOIN surgical_procedure s ON s.admission_id = a.admission_id;
 -- 9 - 12   |   @Mohammad
 -- ---------------------------------------------------------------------
 
--- Q9: Calculate the average length of stay for each critical care unit type, such as MICU,
+-- Q9: CCalculate the average length of stay for each critical care unit type, such as MICU,
 -- SICU, ICU, and CCU. Display the unit type and its average length of stay.
 SELECT
     unit_type,
-    AVG(exit_date_time - entry_date_time) AS average_length_of_stay
+    AVG(exit_date_time - entry_date_time) AS average_length_of_stay_days
 FROM icu_stay
 WHERE exit_date_time IS NOT NULL
 GROUP BY unit_type
@@ -109,17 +138,16 @@ ORDER BY p.name;
 -- including patients who have not received any examinations.
 SELECT
     p.name,
-    COUNT(re.examination_id) AS total_radiology_examinations
+    COUNT(re.examination_id) AS total_radiology_exams
 FROM patient p
 LEFT JOIN admission a
     ON p.patient_id = a.patient_id
-LEFT JOIN diagnostic_order d
-    ON a.admission_id = d.admission_id
+LEFT JOIN diagnostic_order doo
+    ON a.admission_id = doo.admission_id
 LEFT JOIN radiology_examination re
-    ON d.order_id = re.order_id
+    ON doo.order_id = re.order_id
 GROUP BY p.patient_id, p.name
 ORDER BY p.name;
-
 
 -- Q12: Find patients whose discharge-summary clinical note
 -- contains the keyword "recovery", case-insensitively.
@@ -131,7 +159,7 @@ JOIN admission a
 JOIN clinical_note cn
     ON a.admission_id = cn.admission_id
 WHERE cn.type = 'Discharge Summary'
-  AND LOWER(cn.contents) LIKE '%recovery%'
+  AND cn.contents ILIKE '%recovery%'
 ORDER BY p.name;
 
 -- ---------------------------------------------------------------------
@@ -227,14 +255,11 @@ HAVING COUNT(DISTINCT icu_stay.unit_type) > 1;
 
 	
 -- Q18: Retrieve the latest clinical note for each patient.
-SELECT DISTINCT ON (p.patient_id)
-    p.name,
-    cn.type AS type,
-    cn.creation_date AS creation_date,
-    cn.patient_symptoms AS patient_symptoms
+SELECT DISTINCT ON (p.patient_id) 
+       p.name, cn.contents, cn.creation_date, cn.patient_symptoms
 FROM patient p
 JOIN admission a ON a.patient_id = p.patient_id
-JOIN clinical_note cn ON a.admission_id = cn.admission_id
+JOIN clinical_note cn ON cn.admission_id = a.admission_id
 ORDER BY p.patient_id, cn.creation_date DESC;
 
 
